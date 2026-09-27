@@ -1,0 +1,406 @@
+==========================================================================================
+ สรุปโปรเจกต์ AoHelm : NestJS + Helm + Jenkins CI/CD + ELK บน Kubernetes (kind)
+ ข้อมูล ณ วันที่ 27 ก.ย. 2026
+==========================================================================================
+
+ไฟล์นี้มี 2 ส่วน
+  ส่วน A  จุดที่ผิดหรือขาดในสรุปเดิมของคุณ (ใช้ตรวจก่อนทำ slide)
+  ส่วน B  สรุปฉบับแก้แล้ว เรียงตามลำดับ slide เอาไปใช้ได้เลย
+
+
+##########################################################################################
+ ส่วน A : จุดที่ผิดหรือขาดในสรุปเดิม
+##########################################################################################
+
+[A1] ผิด หรือข้อมูลเก่าแล้ว
+------------------------------------------------------------------------------------------
+1. ช่วงแรก "โฟลเดอร์นี้คืออะไร"
+   - เป็นสถานะตอนเริ่มต้นเท่านั้น ใน slide ควรตั้งหัวข้อว่า "สถานะเริ่มต้น (ก่อนเริ่มงาน)"
+   - ตอนนี้เปลี่ยนไปแล้วหลายอย่าง:
+     * เป็น git repo แล้ว ผูกกับ github.com/Pongohisut007/test-ci-cd
+     * chart ไม่ได้ใช้ nginx แล้ว เปลี่ยนเป็น backend NestJS + PostgreSQL
+     * output.yaml ไม่อยู่ใน git แล้ว (ใส่ไว้ใน .gitignore)
+
+2. ภาพ "kind คืออะไร"
+   - ในภาพเขียนว่า "Pod ของเรา: taskflow-taskflow-chart-xxxx (nginx)" ซึ่งเก่าแล้ว
+   - ตอนนี้ใน cluster มี 2 namespace ที่เราสร้าง:
+     * taskflow : backend + postgresql
+     * logging  : elasticsearch, logstash, kibana, filebeat
+
+3. ตาราง stage ของ Jenkinsfile
+   - เป็นเวอร์ชันก่อนเพิ่ม ELK บน branch feature/ELK ตอนนี้เปลี่ยนเป็น:
+     * "Lint chart" เปลี่ยนชื่อเป็น "Lint charts" และตรวจ 2 chart: taskflow-chart กับ elk-chart
+     * เพิ่ม stage 8 "Deploy ELK" (helm upgrade --install elk + helm test elk)
+     * timeout ของ pipeline เปลี่ยนจาก 30 เป็น 45 นาที
+     * รวมเป็น 8 stage ไม่ใช่ 7
+   - branch main ยังเป็น 7 stage อยู่ จนกว่าจะ merge feature/ELK
+
+4. คู่มือทดสอบ API
+   - "ต้องได้ Hello World!" ไม่ถูกแล้ว
+   - เพราะคุณแก้ข้อความและ commit ไปเอง (commit c50bdbc, 58c8eaf, 8ca132e)
+   - ตอนนี้แอปตอบ "Hello World v4!"
+
+5. สรุป ELK ข้อ 6
+   - เขียนว่า "เจอปัญหา 2 เรื่อง (ข้อ 7)" แต่ในตารางข้อ 7 มี 8 เรื่อง
+   - ควรแก้เป็น "เจอหลายปัญหา (ดูข้อ 7)"
+
+[A2] ขาดหายไป หรือถูกตัด
+------------------------------------------------------------------------------------------
+6. หัวข้อ "ขั้นตอนที่ kind ทำ (ตาม output ที่ขึ้นมา)" มีแต่หัวข้อ ไม่มีเนื้อหา
+   เนื้อหาอยู่ที่ B3
+
+7. คู่มือทดสอบ
+   - ไม่มีหัวข้อ "ระดับ 1" (เนื้อหามี แต่หัวข้อหาย)
+   - ขาด "ระดับ 3 ทดสอบ CI/CD" และ "ระดับ 4 ทดสอบ rollback"
+   เนื้อหาอยู่ที่ B8
+
+8. หัวข้อใหญ่ที่ไม่มีในสรุปเดิมเลย แต่ควรมีใน slide:
+   - ภาพรวมระบบ (architecture ทั้งหมด)                       -> B2
+   - สิ่งที่แก้ใน backend (บั๊ก env, lock file, DB, JWT)       -> B4
+   - สิ่งที่แก้ใน taskflow-chart (Postgres, Secret, port 3000) -> B5
+   - การตั้ง Jenkins ตัวใหม่ (aohelm-jenkins)                 -> B6
+   - git: branch และ commit                                -> B10
+   - ข้อจำกัดและข้อควรระวัง                                   -> B11
+
+[A3] ข้อสังเกตเพิ่มเติม
+------------------------------------------------------------------------------------------
+9. ตัวเลขที่เป็นค่า ณ เวลาทดสอบ (log 5,234 บรรทัด, RAM 4.7 GB)
+   ใน slide ควรเขียนว่า "ณ เวลาทดสอบ" เพราะตัวเลขเปลี่ยนตลอด
+
+10. ข้อความ commit ของคุณบางอันเป็นคำหยาบ ("fuck", "shit", "shit2")
+    ถ้าจะแคป git log หรือหน้า GitHub ลง slide ควรตัดส่วนนั้นออก
+
+11. สถานะที่ต้องบอกให้ชัดใน slide:
+    - feature/ELK ยังไม่ได้ merge เข้า main
+    - ยังไม่ได้ push ขึ้น GitHub
+    - stage "Deploy ELK" ยังไม่เคยรันใน Jenkins จริง
+      (ติดตั้งและทดสอบ ELK ด้วยมือแล้ว ผ่าน)
+
+
+##########################################################################################
+ ส่วน B : สรุปฉบับแก้แล้ว (เรียงตาม slide)
+##########################################################################################
+
+------------------------------------------------------------------------------------------
+[B1] จุดเริ่มต้น
+------------------------------------------------------------------------------------------
+สถานะเริ่มต้น
+  - มีแค่ Helm chart ตั้งต้นจาก "helm create" (image nginx) กับ output.yaml
+  - ยังไม่ได้เป็น git repo
+
+เป้าหมาย
+  1. รัน backend จริงบน Kubernetes
+  2. ทำ CI/CD ด้วย Jenkins
+  3. เก็บ log ด้วย ELK
+
+กติกาที่ตั้งไว้
+  - ใช้ cluster ใหม่ ห้ามแก้ cluster เก่า (taskflow, crossplane-lab)
+  - ใช้ Jenkins ตัวใหม่ ไม่แตะ Jenkins ตัวเก่า
+
+------------------------------------------------------------------------------------------
+[B2] ภาพรวมระบบ (Architecture)
+------------------------------------------------------------------------------------------
+  D:\AoHelm (git, branch main)
+        |  poll ทุก 1 นาที
+        v
+  aohelm-jenkins (Docker container, http://localhost:8090)
+        |  test -> build image -> kind load -> helm upgrade
+        v
+  aohelm-test-control-plane (kind cluster, Kubernetes v1.37)
+    |- namespace taskflow : backend NestJS (port 3000) + PostgreSQL 16
+    |- namespace logging  : Filebeat -> Logstash -> Elasticsearch -> Kibana
+
+โครงสร้างโฟลเดอร์
+  backend/          โค้ด NestJS + Dockerfile + docker-compose (ใช้รันในเครื่อง)
+  taskflow-chart/   Helm chart ของ backend + PostgreSQL
+  elk-chart/        Helm chart ของ ELK
+  jenkins/          Jenkins (Dockerfile, plugins, config-as-code, docker-compose)
+  Jenkinsfile       pipeline
+  README.md         วิธีใช้งาน
+
+------------------------------------------------------------------------------------------
+[B3] kind คืออะไร และสร้าง cluster ยังไง
+------------------------------------------------------------------------------------------
+kind = Kubernetes IN Docker
+  - ใช้ Docker container 1 ตัวแทน node 1 เครื่อง
+  - ไม่ต้องมีเซิร์ฟเวอร์จริงหรือ VM
+
+คำสั่งที่ใช้
+  kind create cluster --name aohelm-test --wait 120s
+
+ขั้นตอนที่ kind ทำ
+  1. Ensuring node image      ดึง image kindest/node:v1.37.0 (มี Kubernetes อยู่ข้างใน)
+  2. Preparing nodes          สร้าง container ขึ้นมาเป็น node
+  3. Writing configuration    เขียน config ให้ kubeadm
+  4. Starting control-plane   รัน kubeadm init: เปิด apiserver, etcd, scheduler, controller-manager
+  5. Installing CNI           ติดตั้ง network ของ pod (kindnet)
+  6. Installing StorageClass  ติดตั้ง storage แบบ local-path (ใช้เป็น disk ของ Postgres และ ES)
+  7. Waiting for Ready        รอจน node พร้อม
+
+ผลลัพธ์
+  - ได้ context ชื่อ "kind-aohelm-test" ใน ~/.kube/config
+  - kind ตั้งให้ context นี้เป็นตัวที่ใช้อยู่โดยอัตโนมัติ
+  - ทุกคำสั่งจึงใส่ --context หรือ --kube-context เสมอ กันไม่ให้พลาดไปโดน cluster เก่า
+
+------------------------------------------------------------------------------------------
+[B4] สิ่งที่แก้ใน backend (NestJS)
+------------------------------------------------------------------------------------------
+1. บั๊กชื่อ env ไม่ตรงกัน
+   - docker-compose ส่ง DATABASE_HOST แต่โค้ดอ่าน DB_HOST
+   - ผลคือแอปต่อ DB ไม่ได้
+   - แก้ compose ให้ใช้ DB_* ให้ตรงกับโค้ด
+
+2. package-lock.json ไม่ตรงกับ package.json
+   - ทำให้ "npm ci" และ docker build พัง
+   - สร้าง lock file ใหม่ (ไม่ได้แก้ package.json)
+
+3. synchronize ของ TypeORM
+   - เปลี่ยนเป็นตั้งค่าผ่าน DB_SYNCHRONIZE
+   - โปรเจกต์ยังไม่มี migration จึงเปิดไว้ (true) ไม่อย่างนั้นตารางจะไม่ถูกสร้าง
+
+4. JWT_SECRET
+   - ถ้าเป็น production แล้วไม่ได้ตั้งค่านี้ แอปจะ error ทันที
+   - เลิกใช้ค่า default ที่ไม่ปลอดภัย
+
+5. Dockerfile
+   - เปิด NODE_ENV=production
+   - เพิ่ม npm cache ให้ build รอบถัดไปเร็วขึ้น
+   - .dockerignore เปลี่ยนเป็น .env* กัน secret หลุดเข้า image
+
+6. แก้ path ของ start:prod (dist/src/main)
+
+ผลทดสอบ: docker compose ต่อ DB ได้ และตารางถูกสร้างครบ 17 ตาราง
+
+------------------------------------------------------------------------------------------
+[B5] สิ่งที่แก้ใน taskflow-chart
+------------------------------------------------------------------------------------------
+  - image     : taskflow-backend (เลิกใช้ nginx) ที่ port 3000
+  - config    : ConfigMap สำหรับค่าทั่วไป และ Secret สำหรับรหัสผ่าน, JWT, R2
+  - database  : PostgreSQL 16 แบบ StatefulSet มี disk 1Gi
+  - ลำดับการเริ่ม: initContainer "wait-for-postgresql" ให้แอปรอ DB พร้อมก่อน
+  - รีสตาร์ท   : ใส่ checksum ของ config ไว้ใน pod แก้ config แล้ว pod รีสตาร์ทเอง
+  - helm test : ยิง request ไปหาแอป ต้องได้คำตอบกลับ
+
+------------------------------------------------------------------------------------------
+[B6] Jenkins ตัวใหม่ (aohelm-jenkins)
+------------------------------------------------------------------------------------------
+  - เปิดที่ http://localhost:8090 user admin (รหัสผ่านอยู่ในไฟล์ jenkins/.env)
+  - image ทำเองจาก jenkins/jenkins:lts-jdk21 เพิ่ม docker CLI, node 22, helm, kubectl, kind
+  - ตั้งค่าทั้งหมดด้วย Configuration-as-Code ไม่ต้องกดตั้งค่าเอง
+    * สร้าง user admin
+    * สร้าง credential "taskflow-jwt-secret"
+    * สร้าง job "taskflow"
+  - job "taskflow" ดึงโค้ดจาก D:\AoHelm ที่ mount เข้าไปเป็น /repo
+    * เช็ค branch main ทุก 1 นาที
+    * มี commit ใหม่เมื่อไหร่ จะ build ให้เอง
+  - ใช้ Docker ของเครื่องผ่าน /var/run/docker.sock
+  - ต่อเข้า Docker network "kind" เพื่อคุยกับ cluster
+  - ผลที่ผ่านมา: build #2 ถึง #5 SUCCESS
+    (#1 fail เพราะ parameter ยังว่างใน build แรก แก้แล้ว)
+
+------------------------------------------------------------------------------------------
+[B7] Jenkins Pipeline (ฉบับ feature/ELK: 8 stage)
+------------------------------------------------------------------------------------------
+  #  Stage           ทำอะไร                                    คำสั่งหลัก
+  -  ------------    ---------------------------------------   -------------------------------
+  0  Checkout SCM    ดึงโค้ดจาก branch main (Jenkins ทำให้เอง)     git clone file:///repo
+  1  Prepare         ตั้ง tag ของ image = เลข build-commit        env.TAG = "5-8ca132e"
+  2  Test backend    ติดตั้ง dependency แล้วรัน unit test          npm ci, npm test
+  3  Lint charts     ตรวจ chart ทั้ง 2 ตัว                        helm lint taskflow-chart elk-chart
+  4  Build image     build image ของ backend                    docker build
+  5  Load into kind  โหลด image เข้า cluster (ไม่ใช้ registry)     kind load docker-image
+  6  Deploy          ติดตั้งหรืออัปเดตแอป แล้วรอจน pod พร้อม         helm upgrade --install --wait
+  7  Smoke test      ทดสอบว่าแอปตอบกลับได้                        helm test, kubectl get pods
+  8  Deploy ELK      ติดตั้งหรืออัปเดต ELK แล้วทดสอบว่า log เข้า     helm upgrade --install elk
+                                                              + helm test elk
+  -  Post Actions    ลบ kubeconfig ทิ้ง ถ้า fail จะบอกวิธี rollback  rm -f $KUBECONFIG
+
+ลำดับการทำงาน
+  commit -> Checkout -> Prepare -> Test --X--> หยุด (ไม่ deploy)
+                                       |
+                                       v
+             Lint -> Build -> Load -> Deploy --X--> หยุด + แสดงคำสั่ง rollback
+                                         |
+                                         v
+                                   Smoke test -> Deploy ELK -> SUCCESS
+
+  CI = stage 1-4 : ตรวจโค้ดและ chart แล้วสร้าง image
+  CD = stage 5-8 : เอาขึ้น cluster แล้วทดสอบว่าใช้งานได้จริง
+
+  timeout ของทั้ง pipeline = 45 นาที
+  (branch main ยังเป็น 7 stage timeout 30 นาที จนกว่าจะ merge)
+
+------------------------------------------------------------------------------------------
+[B8] วิธีทดสอบ (4 ระดับ)
+------------------------------------------------------------------------------------------
+ระดับ 1 : ระบบรันอยู่ไหม
+  kubectl --context kind-aohelm-test -n taskflow get pods
+  helm list -n taskflow --kube-context kind-aohelm-test
+  -> pod ของแอปและ postgresql-0 ต้องเป็น 1/1 Running และ release ต้องเป็น deployed
+  -> ใน Jenkins build ล่าสุดต้องเป็นสีเขียว
+
+ระดับ 2 : API ต่อ DB ได้จริงไหม (PowerShell)
+  terminal 1:
+    kubectl --context kind-aohelm-test -n taskflow port-forward svc/taskflow-taskflow-chart 8080:80
+  terminal 2:
+    Invoke-RestMethod http://localhost:8080
+      -> ได้ "Hello World v4!" (ข้อความที่คุณแก้ไว้ล่าสุด)
+    สมัครสมาชิก : POST /auth/register
+    login       : POST /auth/login     -> ได้ accessToken
+    ดูข้อมูลตัวเอง : GET /auth/me + Bearer token -> ได้ข้อมูล user
+    ไม่ใส่ token  : GET /auth/me        -> 401 Unauthorized
+  ดูข้อมูลใน DB ตรงๆ:
+    kubectl --context kind-aohelm-test -n taskflow exec -it taskflow-taskflow-chart-postgresql-0 -- psql -U taskflow -d taskflow -c "select email, role from users;"
+  หมายเหตุ: ใน DB มี user test1@example.com อยู่แล้ว (สร้างตอนทดสอบ)
+
+ระดับ 3 : CI/CD ทำงานไหม
+  ก. แก้ app.service.ts และ app.controller.spec.ts ให้ตรงกัน แล้ว commit
+     -> Jenkins build เองภายใน 1 นาที -> แอปได้ข้อความใหม่
+     (คุณทดสอบข้อนี้แล้ว 3 รอบ: build #3, #4, #5 SUCCESS)
+  ข. แก้แค่ app.service.ts ไม่แก้ test แล้ว commit
+     -> pipeline หยุดที่ stage Test backend และไม่ deploy
+     -> พิสูจน์ว่า CI กันโค้ดพังได้
+
+ระดับ 4 : rollback
+  helm history taskflow -n taskflow --kube-context kind-aohelm-test
+  helm rollback taskflow <revision> -n taskflow --kube-context kind-aohelm-test
+
+------------------------------------------------------------------------------------------
+[B9] ELK : เก็บและค้น log
+------------------------------------------------------------------------------------------
+สิ่งที่เลือก
+  - ELK ครบชุด (มี Logstash)
+  - รันใน cluster aohelm-test namespace logging
+  - เปิด security (รหัสผ่าน + TLS)
+  - deploy ผ่าน Jenkins
+
+log วิ่งจากไหนไปไหน
+  pod ทุกตัว -> ไฟล์ /var/log/containers/*.log บน node
+    -> Filebeat (DaemonSet: 1 ตัวต่อ node)
+    -> Logstash :5044 (แยก field)
+    -> Elasticsearch :9200 (HTTPS + รหัสผ่าน, index รายวัน k8s-logs-YYYY.MM.dd)
+    -> Kibana :5601 (หน้าเว็บค้น log)
+
+ไฟล์ใน elk-chart/
+  - values.yaml
+      ค่าทั้งหมด: เวอร์ชัน 8.19.5, RAM ของแต่ละตัว, ชื่อ index, namespace ที่ไม่เก็บ
+  - secrets.yaml
+      สร้าง CA/ใบรับรอง TLS และสุ่มรหัสผ่านตอนติดตั้งครั้งแรก รอบต่อไปใช้ค่าเดิม (ใช้ lookup)
+  - setup-script.yaml
+      ตั้งรหัสผ่านของ kibana_system และสร้าง user logstash_internal
+  - elasticsearch(-config).yaml
+      ES แบบ node เดียว (StatefulSet) disk 5Gi เปิด HTTPS และ TLS ภายใน
+  - logstash(-config).yaml
+      รับ log แยก field แล้วส่งเข้า ES
+  - kibana(-config).yaml
+      Kibana ต่อ ES ผ่าน HTTPS
+  - filebeat(-config).yaml
+      DaemonSet + RBAC ไม่เก็บ log ของ namespace logging
+  - kibana-dataview-job.yaml
+      สร้าง data view "Kubernetes logs" ให้เอง
+  - tests/test-logs-indexed.yaml
+      helm test: ผ่านเมื่อมี log เข้า ES
+  - NOTES.txt
+      บอกวิธีดูรหัสผ่านและเปิด Kibana หลังติดตั้ง
+
+Security
+  - มี 3 user แยกหน้าที่
+      elastic           = admin ใช้ login Kibana
+      kibana_system     = ให้ Kibana ใช้คุยกับ ES
+      logstash_internal = เขียนได้เฉพาะ index k8s-logs-*
+  - ES ใช้ HTTPS ด้วย CA ที่ chart สร้างเอง
+  - รหัสผ่านเก็บใน Secret elk-credentials ไม่ได้อยู่ใน git
+  - ทดสอบแล้ว: ไม่ใส่รหัสผ่านจะได้ 401 ทั้ง ES และ Kibana
+  - ส่วนที่ยังไม่เข้ารหัส: Filebeat -> Logstash (port 5044) แต่อยู่ภายใน cluster
+
+Logstash แยก log ของ NestJS
+  ตัวอย่าง log:
+    [Nest] 1 - 09/27/2026, 1:15:10 PM   LOG [RouterExplorer] Mapped {/users, POST} route
+  หลังแยกได้:
+    log.level    = log
+    nest.context = RouterExplorer
+    nest.message = Mapped {/users, POST} route
+  (ลบรหัสสี ANSI ออกก่อนด้วย)
+
+เปิด Kibana (PowerShell)
+  $p = kubectl --context kind-aohelm-test -n logging get secret elk-credentials -o jsonpath="{.data.elastic-password}"
+  [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($p))
+  kubectl --context kind-aohelm-test -n logging port-forward svc/elk-kibana 5601:5601
+  -> http://localhost:5601 -> login elastic -> Analytics -> Discover -> "Kubernetes logs"
+
+ตัวอย่างคำค้น
+  kubernetes.namespace : "taskflow"
+  nest.context : "RouterExplorer"
+  log.level : "error"
+
+ปัญหาที่เจอและวิธีแก้
+  1. RAM ไม่พอ งานดึง image ถูกสั่งหยุด
+     -> หยุด cluster taskflow เก่า (คุณอนุมัติ) ได้ RAM คืน ~1.5 GB
+  2. ดาวน์โหลดช้า 30-60 KB/s เพราะใช้ hotspot มือถือ
+     -> ย้ายไปใช้เน็ตที่เร็วกว่า ได้ ~13 MB/s
+  3. kind load ใช้กับ image หลายสถาปัตยกรรมไม่ได้
+     -> ให้ node ดึง image เองด้วย crictl pull
+  4. Job สร้าง data view fail เพราะ Kibana ยังไม่พร้อม
+     -> ให้ Job รอ Kibana ได้นานสุด 10 นาที
+  5. log จำนวนมากไม่มีชื่อ namespace เพราะ Filebeat อ่านก่อนเชื่อม Kubernetes API เสร็จ
+     -> ดึง pod/namespace/container จากชื่อไฟล์ log แทน
+  6. grok ไม่รู้จัก level "LOG" ของ NestJS
+     -> ใช้ชื่อ level ของ NestJS เอง: LOG/ERROR/WARN/DEBUG/VERBOSE/FATAL
+  7. แก้ config แล้ว pod ไม่รีสตาร์ท
+     -> แยก config เป็นไฟล์ต่างหาก และใส่ checksum ใน pod
+  8. ล้างข้อมูลทดสอบแล้วไม่มีผล เพราะ Git Bash แปลง path /var/lib/... เป็น path ของ Windows
+     -> ปิดการแปลง path ด้วย MSYS_NO_PATHCONV=1
+
+ผลทดสอบ (ณ เวลาทดสอบ)
+  [ผ่าน]     pod ทั้ง 4 ตัว Running และ helm test elk ผ่าน
+  [ผ่าน]     log เข้า ES 5,234 บรรทัด ทุกบรรทัดมีชื่อ namespace
+  [ผ่าน]     log ของแอปแยก field ได้ 119/121 บรรทัด (อีก 2 เป็น warning ของ Node.js)
+  [ผ่าน]     ไม่มี log ของ namespace logging ปนเข้ามา
+  [ผ่าน]     ไม่ใส่รหัสผ่านได้ 401 และมี data view "Kubernetes logs" แล้ว
+  [ผ่าน]     Docker ใช้ RAM ~4.7 จาก 7.7 GB
+  [ยังไม่ได้ทำ] stage Deploy ELK ใน Jenkins (จะรันหลัง merge เข้า main)
+
+------------------------------------------------------------------------------------------
+[B10] Git : branch และ commit
+------------------------------------------------------------------------------------------
+  main         1c3a0e4  first commit                                            (คุณ)
+               25df1ee  (commit แรก ๆ ของคุณ)                                    (คุณ)
+               11cd1e2  Add backend, deployable Helm chart, and Jenkins CI/CD    (ผม)
+               7f63be4  Jenkinsfile: default KIND_CLUSTER/NAMESPACE on first run (ผม)
+               c50bdbc, 58c8eaf, 8ca132e  ทดสอบ CI/CD ด้วยการแก้ข้อความ Hello    (คุณ)
+  feature/ELK  79d3652  Add ELK log monitoring                                  (ผม)
+
+  สถานะ
+    - ยังไม่ merge feature/ELK เข้า main
+      (merge ได้แบบ fast-forward ไม่มี conflict)
+    - ยังไม่ push ขึ้น GitHub
+
+------------------------------------------------------------------------------------------
+[B11] สิ่งที่รันอยู่ ข้อจำกัด และข้อควรระวัง
+------------------------------------------------------------------------------------------
+container ที่รันอยู่
+  - aohelm-jenkins            : Jenkins (port 8090)
+  - aohelm-test-control-plane : cluster ที่มีแอปและ ELK
+
+container ที่หยุดไว้
+  - cluster taskflow เก่า (3 node) : stop ไว้ ไม่ได้ลบ
+    เปิดคืนได้ด้วย "docker start taskflow-control-plane taskflow-worker taskflow-worker2"
+    แต่ RAM อาจไม่พอถ้าเปิดพร้อม ELK
+  - cluster crossplane-lab และ Jenkins เก่า : ไม่ได้แตะ
+
+ข้อจำกัด
+  - เหมาะกับการเทสในเครื่องเท่านั้น
+  - Jenkins รันเป็น root และใช้ Docker ของเครื่องโดยตรง ไม่ควรเอาไปใช้แบบนี้บนเซิร์ฟเวอร์จริง
+  - ยังไม่ได้ใส่ค่า R2 (Cloudflare) ระบบอัปโหลดไฟล์จึงยังใช้ไม่ได้
+  - TypeORM synchronize ยังเปิดอยู่ เพราะยังไม่มี migration
+    ถ้าจะใช้งานจริงควรทำ migration แล้วปิด
+  - ES เป็น node เดียว ไม่มี replica ถ้าจะใช้จริงควรมีหลาย node
+  - ช่วง Filebeat -> Logstash ยังไม่เข้ารหัส
+  - Jenkins ดูแค่ branch main การแก้ใน feature/ELK จะยังไม่ deploy
+
+ขั้นต่อไป
+  1. merge feature/ELK เข้า main
+     git checkout main; git merge feature/ELK
+  2. ดู Jenkins รัน stage Deploy ELK จนเป็นสีเขียว
+  3. push ขึ้น GitHub เมื่อพร้อม
+     git push origin main
